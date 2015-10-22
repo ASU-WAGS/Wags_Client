@@ -75,6 +75,17 @@ public class Node {
 		return false;
 	}
 	
+	public ArrayList<EdgeParent> getEdges() {
+		ArrayList<EdgeParent> edges = ec.getEdges();
+		ArrayList<EdgeParent> nodeEdges = new ArrayList<EdgeParent>();
+		for (int i = 0; i < edges.size(); i++) {
+			if ((edges.get(i).getN1() == this || edges.get(i).getN2() == this)) {
+				nodeEdges.add(edges.get(i));
+			}
+		}
+		return nodeEdges;
+	}
+	
 	public NodeState getState() {
 		return ns;
 	}
@@ -189,6 +200,10 @@ public class Node {
 		this.ec = ec;
 	}
 	
+	public EdgeCollection getEdgeCollection() {
+		return ec;
+	}
+	
 	public NodeCollection getNodeCollection() {
 		return nc;
 	}
@@ -204,16 +219,27 @@ public class Node {
 	}
 
 	public Node getRightChild() {
-		return rightChild;
+		if (rightChild != null) {
+			return rightChild;
+		} else return null;
 	}
 	
 	public void setChild(Node childNode) {
-		if (childNode.getLeft() < this.getLeft()) {
-			setLeftChild(childNode);
+		if (childNode != null) {
+			if (childNode.getLeft() < this.getLeft()) {
+				setLeftChild(childNode);
+			}
+			else {
+				setRightChild(childNode);
+			}
+		} else {
+			resetChildren();
 		}
-		else {
-			setRightChild(childNode);
-		}
+	}
+	
+	private void resetChildren() {
+		setLeftChild(null);
+		setRightChild(null);
 	}
 
 	public void setRightChild(Node rightChild) {
@@ -234,6 +260,20 @@ public class Node {
 
 	public void setParent(Node parent) {
 		this.parent = parent;
+	}
+	
+	// Returns true if there is an MST Selected line other than the param line
+	public boolean MSTSelected(Line line) {		
+		ArrayList<EdgeParent> edges = getEdges();
+		
+		for (int i = 0; i < edges.size(); i++) {
+			if (line != edges.get(i).getLine()) {
+				if (edges.get(i).getLine().getStrokeColor().equals("#27f500")) 
+					return true;
+			}
+		}
+		
+		return false;
 	}
 }	
 

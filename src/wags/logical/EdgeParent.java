@@ -78,12 +78,20 @@ public abstract class EdgeParent implements IsSerializable
 		return line;
 	}
 	
+	public void setWeight(int weight) {
+		this.weight = weight;
+	}
+	
 	public boolean isWeightedEdge(){
 		return weight!=0;
 	}
 	
+	public String getWeightedEdge() {
+		return weight + "";
+	}
+	
 	@Override
-	public String toString(){
+	public String toString() {
 		return "Weight: "+this.weight+" N1: "+n1.toString()+" N2: "+n2.toString();
 	}
 	

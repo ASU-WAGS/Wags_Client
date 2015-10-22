@@ -21,8 +21,8 @@ public class LogicalProblem{
 	
 	public LogicalProblem(int id, String title, String problemText, String nodes,
 			String xPositions, String yPositions, String insertMethod,
-			String edges, String arguments, int evaluation, int edgeRules,
-			int edgesRemovable, int nodesDraggable, String nodeType, String genre,
+			String edges, String arguments, int evaluation, Integer edgeRules,
+			Integer edgesRemovable, int nodesDraggable, String nodeType, String genre,
 			int group) {
 
 		this.id = id;

@@ -92,7 +92,9 @@ public class NodeCollection implements IsSerializable
 		String[] traversal = new String[nodes.size()];
 		traversalString = "";
 		Node root = getNode(0);
+		clearTraversal(edgeList);
 		for (int i =0; i < edgeList.size(); i++) {
+			
 			int n1Pos = edgeList.get(i).getN1().getTop();
 			int n2Pos = edgeList.get(i).getN2().getTop();
 			
@@ -104,8 +106,8 @@ public class NodeCollection implements IsSerializable
 				edgeList.get(i).getN1().setChild(edgeList.get(i).getN2());
 				edgeList.get(i).getN2().setParent(edgeList.get(i).getN1());
 			}
-			
 		}
+		
 		switch (traversalType) {
 		case PREORDER:
 			for (int i = 0; i < nodes.size(); i++) {
@@ -238,6 +240,15 @@ public class NodeCollection implements IsSerializable
 		catch(Exception e)
 		{
 			System.out.println("Still ok");
+		}
+	}
+	
+	private void clearTraversal(ArrayList<EdgeParent> edges) {
+		for (int i = 0; i < edges.size(); i++) {
+			edges.get(i).getN1().setChild(null);
+			edges.get(i).getN1().setParent(null);
+			edges.get(i).getN2().setChild(null);
+			edges.get(i).getN2().setParent(null);
 		}
 	}
 	

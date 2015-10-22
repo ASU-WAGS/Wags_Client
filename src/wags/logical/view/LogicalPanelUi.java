@@ -120,6 +120,7 @@ public class LogicalPanelUi extends Composite {
 		case "hashing": 
 		case "heapInsert":
 		case "heapDelete":
+		case "mst":
 			initialize();			
 			break;
 		default:
@@ -159,14 +160,19 @@ public class LogicalPanelUi extends Composite {
 		Evaluate eval = new Evaluate(args);
 		switch (logProb.genre) {
 		case "traversal":
-			eval.traversalEvaluate(nc, ec);
+			evaluateButton.setEnabled(!eval.traversalEvaluate(nc, ec));
 			break;
 		case  "heapInsert":
 		case "heapDelete":
-			eval.heapEvaluate(nc, ec);
+			evaluateButton.setEnabled(!eval.heapEvaluate(nc, ec));
 			break;
 		case "hashing":
-			eval.hashingEvaluate(nc, grid);
+			evaluateButton.setEnabled(!eval.hashingEvaluate(nc, grid));				
+			break;
+		case "mst":
+			args = logProb.arguments.split(" ");
+			eval = new Evaluate(args);
+			evaluateButton.setEnabled(!eval.mstEvaluate(nc, ec));
 			break;
 		}
 	}
@@ -240,13 +246,6 @@ public class LogicalPanelUi extends Composite {
 		nc = new NodeCollection();
 		String temp = logProb.nodes;
 		String[] nodeList = temp.split(" ");
-//		String[] edgeList = edges_temp.split(" |\\,");
-//		EdgeUndirected eu;
-//		for (int i = 0; i < edgeList.length; i++) {
-//			
-//			ec.addWeightLabel(edgeList[i], 20, 50, edge);
-//			Window.alert(edgeList[i]);
-//		}
 		for (int i = 0; i < nodeList.length; i++) {
 			nc.addNode(new Node(nodeList[i], new Label(nodeList[i])));
 		}
@@ -406,5 +405,9 @@ public class LogicalPanelUi extends Composite {
 	
 	public static boolean isDraggable() {
 		return isDrag;
+	}
+	
+	public static boolean edgesRemovable() {
+		return logProb.edgesRemovable;
 	}
 }
