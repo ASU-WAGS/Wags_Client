@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 import wags.logical.view.LogicalPanelUi;
 import wags.logical.view.LogicalPanelUi.Color;
+import wags.logical.view.LogicalProblem;
+
+import com.allen_sauer.gwt.dnd.client.drop.DropController;
 
 import com.google.gwt.user.client.Window;
 
@@ -20,6 +23,7 @@ public class NodeState extends NodeCollection {
 
 	public int state;
 	public static boolean manual = false;
+	public static boolean swap = false;
 	private Node node;
 	private NodeCollection nc;
 	
@@ -27,6 +31,7 @@ public class NodeState extends NodeCollection {
 	final static int CLICKED = 1;
 	final static int DOUBLE_CLICKED = 2;
 	final static int ADD_EDGE_CLICK = 3;
+	final static int SWAP_NODES_CLICK = 4;
 
 	public NodeState(Node node) {
 		this.node = node;
@@ -42,11 +47,20 @@ public class NodeState extends NodeCollection {
 	public void click() {
 		if (manual) {
 			node.selected(node.getLabel());
-			state = DOUBLE_CLICKED;
 			LogicalPanelUi.setMessage("Click the second node of the edge to add", Color.Notification);
-			manual = false;
-			for (int i = 0; i < nc.size(); i++)
-				NodeDragController.getInstance().makeNotDraggable(nc.getNode(i).getLabel());
+			toggleAdd(true);
+		} else if (swap) { 
+			Node swapNode = findNodeWithState(SWAP_NODES_CLICK);
+			if (swapNode == null) {
+				node.selected(node.getLabel());
+				toggleSwap(true);
+				LogicalPanelUi.setMessage("Click the second node to swap with", Color.Notification);
+			} else if (!swapNode.equals(node)) {
+				swapNodes(swapNode);
+			} else {
+				LogicalPanelUi.setMessage("Can't swap a node with itself; please click another node.", Color.Warning);
+			}
+			
 		} else {
 			Node drawNode = findNodeWithState(DOUBLE_CLICKED);
 			if (drawNode != null && !drawNode.equals(node)) {
@@ -54,11 +68,10 @@ public class NodeState extends NodeCollection {
 				addEdgeClick(drawNode);
 			}
 			else if (drawNode.equals(node)) {
-				LogicalPanelUi.setMessage("You cannot create an edge to the same node; please click a different node", Color.Warning);
+				LogicalPanelUi.setMessage("You cannot create an edge to the same node.", Color.Warning);
 				drawNode.getState().notClicked();
-				state = CLICKED;
-				for (int i = 0; i < nc.size(); i++)
-					NodeDragController.getInstance().makeDraggable(nc.getNode(i).getLabel());
+				notClicked();
+				toggleAdd(false);
 			}
 			else {
 				state = CLICKED;
@@ -73,12 +86,9 @@ public class NodeState extends NodeCollection {
 		if (resetNode != null) {
 			resetNode.getState().notClicked();
 			LogicalPanelUi.setMessage("", Color.None);
-		}
-		else {
+		} else {
 			node.selected(node.getLabel());
-			for (int i = 0; i < nc.size(); i++)
-				NodeDragController.getInstance().makeNotDraggable(nc.getNode(i).getLabel());
-			state = DOUBLE_CLICKED;
+			toggleAdd(true);
 			LogicalPanelUi.setMessage("", Color.None);
 		}
 	}
@@ -108,8 +118,53 @@ public class NodeState extends NodeCollection {
 			node.getState().notClicked();
 			toDraw.drawEdge(node);
 		}
-		for (int i = 0; i < nc.size(); i++)
-			NodeDragController.getInstance().makeDraggable(nc.getNode(i).getLabel());
+		LogicalPanelUi.addButton.setText("Add Edge");
+		toggleAdd(false);
+	}
+	
+	public void swapNodes(Node toSwap) {
+		ArrayList<DropController> drops = NodeDragController.getDropControllers();
+		for (DropController i : drops) {
+			Window.alert(i.getDropTarget().toString());
+		}
+		
+		LogicalPanelUi.setMessage("Swapping nodes: " + node.getLabel().getText() 
+				+ " and " + toSwap.getLabel().getText(), Color.Notification);
+		toSwap.getState().notClicked();
+		
+		LogicalPanelUi.swapButton.setText("Swap Nodes");
+		toggleSwap(false);
+	}
+	
+	private void toggleAdd(boolean toggle) {
+		manual = toggle;
+		if (!manual) {
+			notClicked();
+			for (int i = 0; i < nc.size(); i++) {
+				NodeDragController.getInstance().makeDraggable(nc.getNode(i).getLabel());
+			}
+		} else {
+			state = DOUBLE_CLICKED;
+			for (int i = 0; i < nc.size(); i++) {
+				NodeDragController.getInstance().makeNotDraggable(nc.getNode(i).getLabel());
+			}
+			manual = false;
+		}
+	}
+	
+	private void toggleSwap(boolean toggle) {
+		swap = toggle;
+		if (!swap) {
+			notClicked();
+			for (int i = 0; i < nc.size(); i++) {
+				NodeDragController.getInstance().makeDraggable(nc.getNode(i).getLabel());
+			}
+		} else {
+			state = SWAP_NODES_CLICK;
+			for (int i = 0; i < nc.size(); i++) {
+				NodeDragController.getInstance().makeNotDraggable(nc.getNode(i).getLabel());
+			}
+		}
 	}
 	
 	public Node findNodeWithState(int state) {

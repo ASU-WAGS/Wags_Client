@@ -75,7 +75,9 @@ public class LogicalPanelUi extends Composite {
 	public String name;
 	public TextArea submitText;
 	private ArrayList<Column> grid = new ArrayList<Column>();
-	private SimplePanel[] radixDrops = new SimplePanel[10]; 
+	private static PanelDropController[] radixDrops = new PanelDropController[90];
+	private static PanelDropController[] dequeueDrops = new PanelDropController[10];
+	private SimplePanel[] dequeueLocs = new SimplePanel[10];
 	private static boolean isDrag = false;		// Boolean to find if drag controller exists
 	private LogicalMicrolab logMicro;
 	private LogicalPanel panel;
@@ -94,12 +96,15 @@ public class LogicalPanelUi extends Composite {
 	@UiField AbsolutePanel boundaryPanel;
 	@UiField Button backButton;
 	@UiField Button resetButton;
-	@UiField Button addButton;
+	@UiField public static Button addButton;
 	@UiField Button removeButton;
+	@UiField public static Button swapButton;
 	@UiField Button evaluateButton;
 	@UiField ComplexPanel layoutPanel;
+	@UiField AbsolutePanel dequeueDrop;
 	@UiField Container hashingBoxes;
 	@UiField Container radixContain;
+	@UiField AbsolutePanel radixDrop;
 	@UiField Heading title;
 	@UiField static Heading radixCounter;
 	@UiField Paragraph instructions;
@@ -145,18 +150,45 @@ public class LogicalPanelUi extends Composite {
 	
 	@UiHandler("resetButton")
 	void handleResetClick(ClickEvent e) {
-		Window.Location.reload();
+		if (logProb.genre.equals("radix"))
+			state.reset(logProb);
+		else
+			Window.Location.reload();
 	}
 	
 	@UiHandler("addButton")
 	void handleAddClick(ClickEvent e) { 
-		NodeState.manual = true;
-		setMessage("Click the first node of the edge to add", Color.Notification);
+		if (addButton.getText().equals("Cancel")) {
+			addButton.setText("Add Edge");
+			NodeState.swap = false;
+			NodeState.manual = false;
+			setMessage("", Color.None);
+		} else {
+			addButton.setText("Cancel");
+			NodeState.swap = false;
+			NodeState.manual = true;
+			setMessage("Click the first node of the edge to add", Color.Notification);
+		}
 	}
 	
 	@UiHandler("removeButton")
 	void handleRemoveClick(ClickEvent e) {
 		setMessage("Click the edge to remove", Color.Notification);
+	}
+	
+	@UiHandler("swapButton")
+	void handleSwapClick(ClickEvent e) {
+		if (swapButton.getText().equals("Cancel")) {
+			swapButton.setText("Swap Nodes");
+			NodeState.manual = false;
+			NodeState.swap = false;
+			setMessage("", Color.None);
+		} else {
+			swapButton.setText("Cancel");
+			NodeState.manual = false;
+			NodeState.swap = true;
+			setMessage("Click the first node that you would like to swap", Color.Notification);
+		}
 	}
 	
 	@UiHandler("evaluateButton")
@@ -175,12 +207,9 @@ public class LogicalPanelUi extends Composite {
 			evaluateButton.setEnabled(!eval.hashingEvaluate(nc, grid));				
 			break;
 		case "radix":
-			if (state == null) {
-				state = new RadixState();
-			}
 			int[] radixEvalPositions = new int[10];
 			for (int i = 0; i < 10; i++) {
-				radixEvalPositions[i] = radixDrops[i].getAbsoluteLeft();
+				radixEvalPositions[i] = dequeueLocs[i].getAbsoluteLeft();
 			}
 			evaluateButton.setEnabled(!eval.radixEvaluate(nc, radixEvalPositions, state));
 			break;
@@ -204,6 +233,7 @@ public class LogicalPanelUi extends Composite {
 		boundaryPanel.add(dragPanel);
 		removeButton.setVisible(logProb.edgesRemovable);
 		addButton.setVisible(logProb.edgesRemovable);
+		swapButton.setVisible(logProb.genre.equals("traversal"));
 		setInstructions(logProb.directions);
 		setTitle(logProb.title);
 		dragPanel.setStyleName("drag_panel");
@@ -400,6 +430,14 @@ public class LogicalPanelUi extends Composite {
 		return logProb.edgesRemovable;
 	}
 	
+	public static PanelDropController[] getDequeueDrops() {
+		return dequeueDrops;
+	}
+	
+	public static PanelDropController[] getRadixDrops() {
+		return radixDrops;
+	}
+	
 	private void buildHashingPanel() {
 		hashingBoxes.removeFromParent();
 		Row row = new Row();
@@ -432,44 +470,56 @@ public class LogicalPanelUi extends Composite {
 	}
 	
 	private void buildRadixPanel() {
+		
+		state = new RadixState();
+		
 		radixContain.removeFromParent();
 		int tenth = (int)((Window.getClientWidth() * .47) * .1);
 		for (int i = 0; i < 10; i++) {
-			Label tmp = new Label("" + i);
+			Label tmp = new Label("" + i);         // column number
 			tmp.getElement().getStyle().setProperty("margin", "0"); // fix centering issues
 			Column col = new Column(ColumnSize.LG_1, tmp);
-			radixContain.add(col);
+			radixDrop.add(col);
 			col.setStyleName("radix_column");
 			col.setVisible(true);
-			for (int j = 0; j < 10; j++) {
-				
-				SimplePanel dropPanel = new SimplePanel();
-				dropPanel.setPixelSize(40, 40);
+			
+			for (int j = 0; j < 9; j++) {
 				
 				// set how much space is necessary for alignment - tenth of panel (not counting node)
 				int alignOffset = (tenth > 40) ? ((tenth - 40) / 2) : 60; 
 				
 				int left = (int)((tenth * i) + alignOffset);
 				
+				// if the droptarget is for the dequeuing operation rather than enqueuing
+				if (j == 0) {
+					SimplePanel dropPanel = new SimplePanel();
+					dropPanel.setPixelSize(40, 40);
+					dequeueDrop.add(dropPanel, left, 5);
+					PanelDropController dropController = new PanelDropController(dropPanel);
+					// we don't register dequeuing drop controllers, however; wait until it's
+					// time to dequeue
+					dequeueLocs[i] = dropPanel;
+					dequeueDrops[i] = dropController;
+					radixDrops[i * 9] = dropController;
+				}
+				
+				SimplePanel dropPanel = new SimplePanel();
+				dropPanel.setPixelSize(40, 40);
+					
 				// for the next line, we add the dropTarget to the dragPanel at a location of 
 				// 1/10th the width of the total dragPanel and a 1/4th offset (to centre the node)
-				dragPanel.add(dropPanel, left, (j * 50) + 100 );
+				radixDrop.add(dropPanel, left, (j * 50));
 				PanelDropController dropController = new PanelDropController(dropPanel);
 				NodeDragController.getInstance().registerDropController(dropController);
-				
-				// forgot to make the dequeuing drop targets
-				if (j == 0) {
-					dropPanel = new SimplePanel();
-					dropPanel.setPixelSize(40, 40);
-					dragPanel.add(dropPanel, left, 5);
-					dropController = new PanelDropController(dropPanel);
-					NodeDragController.getInstance().registerDropController(dropController);
-					radixDrops[i] = dropPanel;
-				}
-			}
+				int loc = (i * 9) + j;
+				radixDrops[loc] = dropController;
 		
+			}
+			
 		}
 		
+		radixContain.add(dequeueDrop);
+		radixContain.add(radixDrop);
 		dragPanel.add(radixContain);
 		radixContain.setVisible(true);
 		

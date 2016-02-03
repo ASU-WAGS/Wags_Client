@@ -170,6 +170,9 @@ public class Node {
 		return visited;
 	}
 	
+	/**
+	 * Add default click handler, which uses the NodeState class to mark double clicks
+	 */
 	public void addClickHandler() {
 		label.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -184,6 +187,16 @@ public class Node {
 				
 			}
 		});
+	}
+	
+	/**
+	 * Add your own custom click handler to this particular node, enabling specific
+	 * behaviour particular to your own application
+	 * 
+	 * @param c a ClickHandler that defines an action to be performed onClick
+	 */
+	public void addClickHandler(ClickHandler c) {
+		label.addClickHandler(c);
 	}
 	
 	@Override

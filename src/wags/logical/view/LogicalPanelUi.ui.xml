@@ -34,6 +34,11 @@
 		height: 50px;
 		width: 50px;
 	}
+	
+	.dequeueDrop {
+		height: 100px;
+		margin-top: -75px;
+	}
 
 	.directionsContent {
 		margin-bottom: 1%;
@@ -135,8 +140,9 @@
 	        	<g:Button ui:field="resetButton" styleName="{style.smButton}" height="28px">Reset</g:Button>
 	    	</b:FluidRow>
 	    	<b:FluidRow styleName="{style.buttonPanelRight}">
-	      		<g:Button ui:field="addButton" styleName="{style.lgButton}" height="28px">Add Edge</g:Button>
-	      		<g:Button ui:field="removeButton" styleName="{style.lgButton}" height="28px">Remove Edge</g:Button>
+	      		<g:Button ui:field="addButton" styleName="{style.smButton}" height="28px">Add Edge</g:Button>
+	      		<g:Button ui:field="removeButton" styleName="{style.smButton}" height="28px">Remove Edge</g:Button>
+	      		<g:Button ui:field="swapButton" styleName="{style.smButton}" height="28px">Swap Nodes</g:Button>
 	       		<g:Button ui:field="evaluateButton" styleName="{style.lgButton}" height="28px">Evaluate</g:Button>
 	   		</b:FluidRow>
 	    </b:FluidRow>
@@ -144,7 +150,10 @@
 			<b:Paragraph ui:field="message" styleName="{style.message}" />
 	    </b:FluidRow>
 	    <g:AbsolutePanel ui:field="boundaryPanel"></g:AbsolutePanel>
-    		<new:Container styleName="{style.radixContain}" ui:field="radixContain" fluid="true" visible="false"></new:Container>
+    		<new:Container styleName="{style.radixContain}" ui:field="radixContain" fluid="true" visible="false">
+    			<g:AbsolutePanel styleName="{style.dequeueDrop}" ui:field="dequeueDrop"></g:AbsolutePanel>
+    			<g:AbsolutePanel ui:field="radixDrop"></g:AbsolutePanel>
+    		</new:Container>
     		<new:Container styleName="{style.rowContain}" ui:field="hashingBoxes" fluid="true" visible="false"></new:Container>
     </g:FlowPanel>
        </b:Column>

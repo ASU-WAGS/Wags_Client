@@ -14,9 +14,6 @@ import wags.logical.view.LogicalPanelUi.Color;
 
 public class Evaluate {
 
-	private final int ONES = 1;
-	private final int TENS = 10;
-	private final int HUNDREDS = 100;
 	private final String CORRECT = "Correct! Please click reset if you'd like to try again.";
 	private final String INCDEQUEUE = "You have dequeued in the wrong order. "
 			+ "Remember to dequeue the buckets from lowest number to highest number, top to bottom.";
@@ -108,7 +105,7 @@ public class Evaluate {
 		
 		switch (state.getCurrentState()) {
 		case Ones:
-			state.advance(checkRadix(ONES, nc, positions));
+			state.advance(checkRadix(3, nc, positions));
 			break;
 		case DOnes:
 			if (state.advance(checkDequeue(3, nc, positions))) {
@@ -116,7 +113,7 @@ public class Evaluate {
 			}
 			break;
 		case Tens:
-			state.advance(checkRadix(TENS, nc, positions));
+			state.advance(checkRadix(4, nc, positions));
 			break;
 		case DTens:
 			if (state.advance(checkDequeue(4, nc, positions))) {
@@ -124,7 +121,7 @@ public class Evaluate {
 			}
 			break;
 		case Hundreds:
-			state.advance(checkRadix(HUNDREDS, nc, positions));
+			state.advance(checkRadix(5, nc, positions));
 			break;
 		case DHundreds:
 			if (state.advance(checkDequeue(5, nc, positions))) {
@@ -154,15 +151,41 @@ public class Evaluate {
 		return true;
 	}
 	
-	private boolean checkRadix(int radix, NodeCollection nc, int[] positions) {
+	private boolean checkRadix(int argNum, NodeCollection nc, int[] positions) {
+		String[] checkPos = args[argNum].split(" ");
+		int radix = 1;
+		
+		if (argNum == 4) 
+			radix = 10;
+		else if (argNum == 5)
+			radix = 100;
 		
 		for (int i = 0; i < nc.size(); i++) {
 			int num = Integer.parseInt(nc.getNode(i).toString());
 			num = ((num / radix) % 10);
 			if (nc.getNode(i).getLabel().getAbsoluteLeft() != positions[num]) {
-				LogicalPanelUi.setMessage("The node " + nc.getNode(i).toString() 
+				LogicalPanelUi.setMessage("The node " + nc.getNode(i).toString()
 						+ " is not in the correct bucket.", Color.Error);
 				return false;
+			} 
+		}
+		
+		// Logic for checking position inside of buckets
+		for (int i = 0; i < 10; i++) {
+			ArrayList<String> withNum = new ArrayList<String>();
+			for (String str : checkPos) {
+				if (((Integer.parseInt(str) / radix) % 10) == i) {
+					withNum.add(str);
+				}
+			}
+			for (int j = 0; j < withNum.size() - 1; j++) {
+				if (nc.getNodeByLabelText(withNum.get(j)).getLabel().getAbsoluteTop() >
+						nc.getNodeByLabelText(withNum.get(j + 1)).getLabel().getAbsoluteTop()) {
+					LogicalPanelUi.setMessage("The node " + withNum.get(j) + " is not in the correct place in its column. Check the order " 
+					+ "of each radix column and make sure you place the nodes as you come to them.", Color.Error);
+					return false;
+					
+				}
 			}
 		}
 		
