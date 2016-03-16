@@ -147,7 +147,7 @@
 	   		</b:FluidRow>
 	    </b:FluidRow>
 	    <b:FluidRow>
-			<b:Paragraph ui:field="message" styleName="{style.message}" />
+			<g:HTML ui:field="message" styleName="{style.message}" />
 	    </b:FluidRow>
 	    <g:AbsolutePanel ui:field="boundaryPanel"></g:AbsolutePanel>
     		<new:Container styleName="{style.radixContain}" ui:field="radixContain" fluid="true" visible="false">

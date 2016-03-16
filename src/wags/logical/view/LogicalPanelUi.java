@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -27,6 +28,7 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Container;
@@ -99,7 +101,7 @@ public class LogicalPanelUi extends Composite {
 	@UiField public static Button addButton;
 	@UiField Button removeButton;
 	@UiField public static Button swapButton;
-	@UiField Button evaluateButton;
+	@UiField public static Button evaluateButton;
 	@UiField ComplexPanel layoutPanel;
 	@UiField AbsolutePanel dequeueDrop;
 	@UiField Container hashingBoxes;
@@ -108,7 +110,7 @@ public class LogicalPanelUi extends Composite {
 	@UiField Heading title;
 	@UiField static Heading radixCounter;
 	@UiField Paragraph instructions;
-	@UiField static Paragraph message;
+	@UiField public static HTML message;
 	
 	public LogicalPanelUi(LogicalPanel panel, LogicalProblem problem) {		
 		initWidget(uiBinder.createAndBindUi(this));
@@ -198,7 +200,7 @@ public class LogicalPanelUi extends Composite {
 		Evaluate eval = new Evaluate(args);
 		switch (logProb.genre) {
 		case "traversal":
-			evaluateButton.setEnabled(!eval.traversalEvaluate(nc, ec));
+			evaluateButton.setEnabled(!eval.traversalEvaluate(nc, ec, logProb.nodeType.equals("clickableforceeval")));
 			break;
 		case  "heapInsert":
 		case "heapDelete":
@@ -300,6 +302,11 @@ public class LogicalPanelUi extends Composite {
 					nc.getNode(i).addClickHandler();
 				dragPanel.add(itemsInPanel.get(i), Integer.parseInt(xpositions[i]), Integer.parseInt(ypositions[i]));
 			}
+			if (logProb.nodeType.substring(0, 9).equals("clickable")) { // BST traversal
+				swapButton.setVisible(false);
+				boolean forceEval = logProb.nodeType.equals("clickableforceeval");
+				LogicalProblemCreator.buildTraversalPanel(forceEval, nc);
+			}
 			String[] edges = logProb.edges.split(",");
 			ec.setCanvas(canvas);
 			if (edges[0] != "") {
@@ -307,9 +314,7 @@ public class LogicalPanelUi extends Composite {
 			}
 			wags.logical.view.LogicalProblem.setEdgePairs(edges);
 			wags.logical.view.LogicalProblem.setEdgeCollection(ec);
-		} else if (logProb.genre == "simplepartition") {
-			
-		} else {
+		} else if (!logProb.genre.equals("simplepartition")) {
 			for (int i = 0; i < nc.size(); i++) {
 				int left = 5 + (50 * i);
 				int top = 5;

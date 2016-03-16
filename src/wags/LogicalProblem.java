@@ -27,7 +27,7 @@ public class LogicalProblem{
 
 		this.id = id;
 		this.title = title;
-		this.directions = problemText;
+		this.directions = problemText.replace("\\", "");
 		this.nodes = nodes;
 		this.xPositions = xPositions;
 		this.yPositions = yPositions;

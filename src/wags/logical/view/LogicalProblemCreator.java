@@ -1,6 +1,7 @@
 package wags.logical.view;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Icon;
@@ -22,18 +23,22 @@ import org.gwtbootstrap3.client.ui.Row;
 import org.gwtbootstrap3.client.ui.constants.ColumnSize;
 
 import wags.LogicalProblem;
+import wags.logical.Evaluate;
 import wags.logical.Node;
 import wags.logical.NodeCollection;
 import wags.logical.NodeDragController;
 import wags.logical.PanelDropController;
 import wags.logical.RadixState;
+import wags.logical.view.LogicalPanelUi.Color;
+import wags.logical.view.LogicalProblem.LogicalProblemUiBinder;
 
 public class LogicalProblemCreator {
 
 	protected AbsolutePanel canvasContain;
-	private LogicalProblem problem;
+	private static LogicalProblem problem;
 	public static NodeCollection nc;
 	public static ArrayList<Column> cols = new ArrayList<Column>();
+	public static LinkedHashSet<Node> trav;
 	
 	public LogicalProblemCreator() {
 		
@@ -56,6 +61,10 @@ public class LogicalProblemCreator {
 	
 	public static NodeCollection getNodes() {
 		return nc;
+	}
+	
+	private void setNodes(NodeCollection nc) {
+		this.nc = nc;
 	}
 	
 	public static void buildHashingPanel(Container hashingBoxes, LogicalProblem logProb, ArrayList<Column> grid, AbsolutePanel dragPanel) {
@@ -197,6 +206,38 @@ public class LogicalProblemCreator {
 		
 		sortBoxes.setVisible(true);
 		
+	}
+	
+	public static void buildTraversalPanel(final boolean eval, NodeCollection nodes) {
+		nc = nodes;
+		trav = new LinkedHashSet<Node>(nc.size());
+		for (Node node : nc) {
+			node.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent e) {
+					Label clicked = (Label) e.getSource();
+					if (clicked.getStyleName().equals("node")) {
+						clicked.removeStyleName("node");
+						clicked.addStyleName("selected_node");
+						trav.add(nc.getNodeByLabel(clicked));
+						String progress = "";
+						for (Node element : trav)
+							progress += element.toString() + " ";
+						LogicalPanelUi.setMessage(progress, Color.Notification);
+					} else {
+						clicked.removeStyleName("selected_node");
+						clicked.addStyleName("node");
+						trav.remove(nc.getNodeByLabel(clicked));
+						String progress = "";
+						for (Node element : trav)
+							progress += element.toString() + " ";
+						LogicalPanelUi.setMessage(progress, Color.Notification);
+					}
+					if (eval) 
+						LogicalPanelUi.evaluateButton.click();
+				}
+			});
+		}
 	}
 
 	

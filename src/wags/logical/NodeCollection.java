@@ -1,13 +1,12 @@
 package wags.logical;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import com.allen_sauer.gwt.dnd.client.DragController;
-import com.google.gwt.thirdparty.guava.common.collect.BinaryTreeTraverser;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.IsSerializable;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Label;
@@ -15,7 +14,7 @@ import com.google.gwt.user.client.ui.Label;
 import wags.logical.view.LogicalPanelUi;
 import wags.logical.view.LogicalProblem;
 
-public class NodeCollection implements IsSerializable
+public class NodeCollection implements IsSerializable, Iterable<Node>
 {	
 
 	public static final int PREORDER = 0;
@@ -262,6 +261,11 @@ public class NodeCollection implements IsSerializable
 	
 	public int size() {
 		return nodes.size();
+	}
+
+	@Override
+	public Iterator<Node> iterator() {
+		return nodes.iterator();
 	}
 
 }
