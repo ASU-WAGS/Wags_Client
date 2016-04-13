@@ -40,14 +40,16 @@ public class NodeDropController extends AbsolutePositionDropController implement
 	{
 		NodeCollection nc = LogicalProblem.getNodeCollection();
 		super.onDrop(context);
-		if (context.draggable.getStylePrimaryName() == "node") { //is a node, and can be treated as one
-			Node n = nc.getNodeByLabel((Label) context.draggable);
-			Label l = (Label) context.draggable;
-			n.setLeft(l.getElement().getAbsoluteLeft() - l.getElement().getOffsetParent().getAbsoluteLeft());
-			n.setTop(l.getElement().getAbsoluteTop() - l.getElement().getOffsetParent().getAbsoluteTop());
+		if (ec != null) {
+			if (context.draggable.getStylePrimaryName() == "node") { //is a node, and can be treated as one
+				Node n = nc.getNodeByLabel((Label) context.draggable);
+				Label l = (Label) context.draggable;
+				n.setLeft(l.getElement().getAbsoluteLeft() - l.getElement().getOffsetParent().getAbsoluteLeft());
+				n.setTop(l.getElement().getAbsoluteTop() - l.getElement().getOffsetParent().getAbsoluteTop());
+			}
+			ec.updateEdgeDrawings();
+			LogicalPanelUi.setMessage("", Color.None);
 		}
-		ec.updateEdgeDrawings();
-		LogicalPanelUi.setMessage("", Color.None);
 	}
 	
 	public void reset() {

@@ -93,7 +93,8 @@ public class LogicalPanelUi extends Composite {
 	protected EdgeCollection ec;
 	private int count = 0;
 	private LogicalPanel origPanel;
-	private PickupDragController hashingController;
+	private SimplePanel[] panels;
+	private Evaluate eval;
 
 	@UiField AbsolutePanel boundaryPanel;
 	@UiField Button backButton;
@@ -131,6 +132,7 @@ public class LogicalPanelUi extends Composite {
 		case "hashing": 
 		case "heapInsert":
 		case "heapDelete":
+		case "heapsort":
 		case "mst":
 		case "radix":
 		case "simplepartition":
@@ -197,7 +199,8 @@ public class LogicalPanelUi extends Composite {
 	@UiHandler("evaluateButton")
 	void handleEvaluateClick(ClickEvent e) {
 		String[] args = logProb.arguments.split(",");
-		Evaluate eval = new Evaluate(args);
+		if (eval == null)
+			eval = new Evaluate(args);
 		switch (logProb.genre) {
 		case "traversal":
 			evaluateButton.setEnabled(!eval.traversalEvaluate(nc, ec, logProb.nodeType.equals("clickableforceeval")));
@@ -205,6 +208,9 @@ public class LogicalPanelUi extends Composite {
 		case  "heapInsert":
 		case "heapDelete":
 			evaluateButton.setEnabled(!eval.heapEvaluate(nc, ec));
+			break;
+		case "heapsort":
+			evaluateButton.setEnabled(!eval.heapSortEvaluate(nc, panels));
 			break;
 		case "hashing":
 			evaluateButton.setEnabled(!eval.hashingEvaluate(nc, grid));				
@@ -260,6 +266,8 @@ public class LogicalPanelUi extends Composite {
 			LogicalProblemCreator.buildRadixPanel(dragPanel, radixDrop, dequeueDrop);
 		} else if (logProb.genre.equals("simplepartition")) {
 			LogicalProblemCreator.buildSimplePartitionPanel(hashingBoxes, logProb, dragPanel);
+		} else if (logProb.genre.equals("heapsort")) {
+			panels = LogicalProblemCreator.buildHeapSortPanel(dragPanel, hashingBoxes, logProb);
 		}
 		
 

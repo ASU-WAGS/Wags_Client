@@ -93,6 +93,14 @@ public class Node {
 	public String getValue() {
 		return value;
 	}
+	
+	public int getIntegerValue() {
+		try {
+			return Integer.parseInt(value);
+		} catch (Exception e) {
+			return -1;
+		}
+	}
 
 	public Label getLabel() {
 		return label;

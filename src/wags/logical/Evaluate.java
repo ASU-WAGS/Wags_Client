@@ -5,6 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import org.gwtbootstrap3.client.ui.Column;
+import org.gwtbootstrap3.client.ui.Container;
+import org.gwtbootstrap3.client.ui.Row;
 
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.Window;
@@ -23,6 +25,8 @@ public class Evaluate {
 	private final String INCDEQUEUE = "You have dequeued in the wrong order. "
 			+ "Remember to dequeue the buckets from lowest number to highest number, top to bottom.";
 	private String[] args;
+	private ArrayList<String> correctOrders;
+	private int currNum = 0;
 	
 	public Evaluate(String[] arguments) {
 		args = arguments;
@@ -65,6 +69,44 @@ public class Evaluate {
 		}
 		return !incorrect;
 	}	
+	
+	public boolean heapSortEvaluate(NodeCollection nc, SimplePanel[] panels) {
+		
+		String heapOrder = "";
+		
+		for (int i = 0; i < panels.length; i++) {
+			try {
+				heapOrder += ((Label)panels[i].getWidget()).getText();
+			} catch (Exception e) {
+				LogicalPanelUi.setMessage("Incorrect. Remember to move all nodes back into the array when finished.", Color.Error);
+				return false;
+			}
+		}
+		
+		if (correctOrders == null)
+			correctOrders = nc.getHeapTraversals();
+		
+		if (heapOrder.equals(correctOrders.get(currNum)) && currNum < correctOrders.size() - 1) {
+			LogicalPanelUi.setMessage("You have successfully completed that pass.", Color.Notification);
+			currNum++;
+		} else if (heapOrder.equals(correctOrders.get(currNum)) && currNum == correctOrders.size() - 1) {
+			LogicalPanelUi.setMessage(CORRECT, Color.Success);
+			return true;
+		} else {
+			String correctPortion = "";
+			for (int i = 0; i < correctOrders.get(currNum).length(); i++) {
+				if (correctOrders.get(currNum).charAt(i) != heapOrder.charAt(i)) {
+					break;
+				}
+				correctPortion += heapOrder.charAt(i) + " ";
+			}
+			if (correctPortion == "")
+				LogicalPanelUi.setMessage("Incorrect. Hint: The first item is " + correctOrders.get(currNum).charAt(0), Color.Error);
+			LogicalPanelUi.setMessage("Incorrect. You were correct for the portion " + correctPortion, Color.Warning);
+		}
+				
+		return false;
+	}
 	
 	public boolean mstEvaluate(NodeCollection nc, EdgeCollection ec) {
 		boolean correct = true;
@@ -235,7 +277,7 @@ public class Evaluate {
 				return correct;
 			} else {				
 				if (compare.length != trav.size()) {
-					LogicalPanelUi.setMessage("Your traversal is incomplete. Every node must be clicked once to complete a traversal,", Color.Error);
+					LogicalPanelUi.setMessage("Your traversal is incomplete. Every node must be clicked once to complete a traversal.", Color.Error);
 					return false;
 				}
 				

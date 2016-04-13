@@ -27,6 +27,7 @@ import wags.logical.Evaluate;
 import wags.logical.Node;
 import wags.logical.NodeCollection;
 import wags.logical.NodeDragController;
+import wags.logical.NodeDropController;
 import wags.logical.PanelDropController;
 import wags.logical.RadixState;
 import wags.logical.view.LogicalPanelUi.Color;
@@ -331,5 +332,43 @@ public class LogicalProblemCreator {
 		dragPanel.add(leftIcon);
 		dragPanel.add(swapButton);
 		dragPanel.add(rightIcon);
+	}
+	
+	public static SimplePanel[] buildHeapSortPanel(AbsolutePanel dragPanel, Container heapBoxes, LogicalProblem logProb) {
+		// make nodes able to be dropped anywhere, as well as on the actual evaluation boxes
+		NodeDropController.setFields(dragPanel, null);
+		NodeDropController.getInstance();
+		Row row = new Row();
+		
+		SimplePanel[] panels = new SimplePanel[logProb.arguments.split("\\s").length];
+		for (int i = 0; i < logProb.arguments.split("\\s").length; i++) {
+			if (i % 12 == 0) {
+				row = new Row();
+				row.setStyleName("heapsort_row");
+				row.setVisible(true);
+				heapBoxes.add(row);
+			}
+			Column col = new Column(ColumnSize.MD_1, new Label("" + i));
+			col.setStyleName("hashing_column");
+			row.add(col);
+			SimplePanel dropPanel = new SimplePanel();   // drop target for each cell
+			dropPanel.setPixelSize(40, 40);
+			dropPanel.getElement().getStyle()
+				.setProperty("margin", "2.5px"); // account for 40x40 node in 50x50 col
+			
+			// This line adds the dropPanel to the cell, making the cell appear to be a drop zone
+			col.add(dropPanel);
+			// Add column to grid ArrayList, for later evaluation
+			//grid.add(col);
+			
+			panels[i] = dropPanel;
+			
+			// set drop controller to dropPanel
+			PanelDropController dropController = new PanelDropController(dropPanel);
+			NodeDragController.getInstance().registerDropController(dropController);
+		}
+		dragPanel.add(heapBoxes);
+		heapBoxes.setVisible(true);
+		return panels;
 	}
 }
