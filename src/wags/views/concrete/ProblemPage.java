@@ -133,7 +133,6 @@ public class ProblemPage extends Composite implements ProblemPageView {
 	@UiHandler ("logicalCategory") 
 	public void onLogicalCategoryClick(ClickEvent event) {
 		presenter.onLogicalCategoryClick();
-		//Window.alert("Logical Problems are currently under construction, please try again later!");
 	}
 	
 	@UiHandler ("subjectListBox") 

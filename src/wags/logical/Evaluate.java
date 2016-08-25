@@ -1,17 +1,22 @@
 package wags.logical;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import org.gwtbootstrap3.client.ui.Column;
+import org.gwtbootstrap3.client.ui.Container;
+import org.gwtbootstrap3.client.ui.Row;
 
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 
 import wags.logical.RadixState;
-import wags.logical.RadixState.State;
 import wags.logical.view.LogicalPanelUi;
+import wags.logical.view.LogicalProblemCreator;
 import wags.logical.view.LogicalPanelUi.Color;
 
 public class Evaluate {
@@ -20,6 +25,8 @@ public class Evaluate {
 	private final String INCDEQUEUE = "You have dequeued in the wrong order. "
 			+ "Remember to dequeue the buckets from lowest number to highest number, top to bottom.";
 	private String[] args;
+	private ArrayList<String> correctOrders;
+	private int currNum = 0;
 	
 	public Evaluate(String[] arguments) {
 		args = arguments;
@@ -62,6 +69,44 @@ public class Evaluate {
 		}
 		return !incorrect;
 	}	
+	
+	public boolean heapSortEvaluate(NodeCollection nc, SimplePanel[] panels) {
+		
+		String heapOrder = "";
+		
+		for (int i = 0; i < panels.length; i++) {
+			try {
+				heapOrder += ((Label)panels[i].getWidget()).getText();
+			} catch (Exception e) {
+				LogicalPanelUi.setMessage("Incorrect. Remember to move all nodes back into the array when finished.", Color.Error);
+				return false;
+			}
+		}
+		
+		if (correctOrders == null)
+			correctOrders = nc.getHeapTraversals();
+		
+		if (heapOrder.equals(correctOrders.get(currNum)) && currNum < correctOrders.size() - 1) {
+			LogicalPanelUi.setMessage("You have successfully completed that pass.", Color.Notification);
+			currNum++;
+		} else if (heapOrder.equals(correctOrders.get(currNum)) && currNum == correctOrders.size() - 1) {
+			LogicalPanelUi.setMessage(CORRECT, Color.Success);
+			return true;
+		} else {
+			String correctPortion = "";
+			for (int i = 0; i < correctOrders.get(currNum).length(); i++) {
+				if (correctOrders.get(currNum).charAt(i) != heapOrder.charAt(i)) {
+					break;
+				}
+				correctPortion += heapOrder.charAt(i) + " ";
+			}
+			if (correctPortion == "")
+				LogicalPanelUi.setMessage("Incorrect. Hint: The first item is " + correctOrders.get(currNum).charAt(0), Color.Error);
+			LogicalPanelUi.setMessage("Incorrect. You were correct for the portion " + correctPortion, Color.Warning);
+		}
+				
+		return false;
+	}
 	
 	public boolean mstEvaluate(NodeCollection nc, EdgeCollection ec) {
 		boolean correct = true;
@@ -195,36 +240,99 @@ public class Evaluate {
 		return true;
 	}
 	
-	public boolean traversalEvaluate(NodeCollection nc, EdgeCollection ec) {
-		boolean incorrect = true;
-		String preorderResult = nc.getTraversal(0, ec.getEdges());
-		String inorderResult = nc.getTraversal(1, ec.getEdges());
-		String postorderResult = nc.getTraversal(2, ec.getEdges());
-		for (int i = 0; i < args.length; i++) {
-			args[i] = args[i].replace(" ", "");
-			if (args[i].equalsIgnoreCase(preorderResult)) { 
-				LogicalPanelUi.setMessage(CORRECT, Color.Success);
-				incorrect = false;
-				break;
+	public boolean traversalEvaluate(NodeCollection nc, EdgeCollection ec, boolean forceEval) {
+		LinkedHashSet<Node> trav = LogicalProblemCreator.trav;
+		if (trav != null) {
+			String[] compare = args[0].split("\\s");
+			
+			if (forceEval) {
+				
+				boolean correct = true;
+				if (trav.size() == 0) {
+					LogicalPanelUi.setMessage("", Color.None);
+					return false;
+				}
+				String fix = "",currTrav = "";
+				int i = 0;
+				for (Node n : trav) {
+					currTrav += n.toString() + " ";
+					if (!n.toString().equals(compare[i]))
+						correct = false;
+					if (!correct) 
+						fix += n.toString() + " ";
+					i++;
+				}
+				
+				if (!correct) {
+					LogicalPanelUi.setMessage("", Color.Warning);
+					LogicalPanelUi.message.setHTML("Current Traversal: " + currTrav +  "<br>Node(s) " + fix 
+							+ "have been clicked out of order. Deselect the node(s) and try again");
+				} else if (trav.size() != compare.length) {
+						LogicalPanelUi.setMessage("Current Traversal: " + currTrav, Color.Notification);
+						correct = false;
+				} else {
+					LogicalPanelUi.setMessage(CORRECT, Color.Success);
+				}
+					
+				return correct;
+			} else {				
+				if (compare.length != trav.size()) {
+					LogicalPanelUi.setMessage("Your traversal is incomplete. Every node must be clicked once to complete a traversal.", Color.Error);
+					return false;
+				}
+				
+				boolean correct = true;
+				String curr = "";
+				
+				int i = 0;
+				for (Node cmp : trav) {
+					if (cmp.toString() != compare[i])
+						correct = false;
+					if (correct)
+						curr += cmp.toString() + " ";
+					i++;
+				}
+				
+				if (correct)
+					LogicalPanelUi.setMessage(CORRECT, Color.Success);
+				else if (curr.equals(""))
+					LogicalPanelUi.setMessage("Incorrect. For the given traversal, what would be the first visited node?", Color.Error);
+				else 
+					LogicalPanelUi.setMessage("The nodes are out of order. The portion " + curr + "is correct. Retrace your steps to find your mistake.", Color.Error);
+				
+				return correct;
 			}
-			else if(args[i].equalsIgnoreCase(inorderResult)) {
-				LogicalPanelUi.setMessage(CORRECT, Color.Success);
-				incorrect = false;
-				break;
+		} else {
+			boolean incorrect = true;
+			String preorderResult = nc.getTraversal(0, ec.getEdges());
+			String inorderResult = nc.getTraversal(1, ec.getEdges());
+			String postorderResult = nc.getTraversal(2, ec.getEdges());
+			for (int i = 0; i < args.length; i++) {
+				args[i] = args[i].replace(" ", "");
+				if (args[i].equalsIgnoreCase(preorderResult)) { 
+					LogicalPanelUi.setMessage(CORRECT, Color.Success);
+					incorrect = false;
+					break;
+				}
+				else if(args[i].equalsIgnoreCase(inorderResult)) {
+					LogicalPanelUi.setMessage(CORRECT, Color.Success);
+					incorrect = false;
+					break;
+				}
+				else if(args[i].equalsIgnoreCase(postorderResult)) {
+					LogicalPanelUi.setMessage(CORRECT, Color.Success);
+					incorrect = false;
+					break;
+				}
 			}
-			else if(args[i].equalsIgnoreCase(postorderResult)) {
-				LogicalPanelUi.setMessage(CORRECT, Color.Success);
-				incorrect = false;
-				break;
+			if (incorrect) {
+				LogicalPanelUi.setMessage("Incorrect! Your preorder traversal was: " + preorderResult + " and your inorder traversal was: " + inorderResult +"",Color.Error);
 			}
+			else {
+				LogicalPanelUi.setMessage(CORRECT, Color.Success);
+			}
+			return !incorrect;
 		}
-		if (incorrect) {
-			LogicalPanelUi.setMessage("Incorrect! Your preorder traversal was: " + preorderResult + " and your inorder traversal was: " + inorderResult +"",Color.Error);
-		}
-		else {
-			LogicalPanelUi.setMessage(CORRECT, Color.Success);
-		}
-		return !incorrect;
 	}
 	
 	public boolean simplePartitionEvaluate(ArrayList<Column> cols) {

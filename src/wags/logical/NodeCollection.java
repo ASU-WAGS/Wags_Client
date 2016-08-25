@@ -1,12 +1,12 @@
 package wags.logical;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import com.allen_sauer.gwt.dnd.client.DragController;
-import com.google.gwt.thirdparty.guava.common.collect.BinaryTreeTraverser;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.IsSerializable;
 import com.google.gwt.user.client.ui.AbsolutePanel;
@@ -15,7 +15,7 @@ import com.google.gwt.user.client.ui.Label;
 import wags.logical.view.LogicalPanelUi;
 import wags.logical.view.LogicalProblem;
 
-public class NodeCollection implements IsSerializable
+public class NodeCollection implements IsSerializable, Iterable<Node>
 {	
 
 	public static final int PREORDER = 0;
@@ -23,6 +23,10 @@ public class NodeCollection implements IsSerializable
 	public static final int POSTORDER = 2;
 	public static final int LATERAL = 3;
 	public String traversalString;
+	
+	private Node[] heap;
+	private ArrayList<String> heapTravs;
+	private int heapPtr;
 	
 	protected ArrayList<Node> nodes;
 	
@@ -189,6 +193,65 @@ public class NodeCollection implements IsSerializable
 		}
 	}
 	
+	public ArrayList<String> getHeapTraversals() {
+		heap = new Node[nodes.size()];
+			
+		for (int i = 0; i < nodes.size(); i++) {
+			heap[i] = nodes.get(i);
+		}
+			
+		heapPtr = heap.length - 1;
+			
+		heapTravs = new ArrayList<String>();
+		
+		sort();
+		
+		return heapTravs;
+	}
+	
+	private void sort() {
+		heapify();
+		for (int i = heapPtr; i > 0; i--) {
+			swap(0, i);
+			heapPtr--;
+			maxHeap(0);
+			
+			String trav = "";
+			for (int j = 0; j < heap.length; j++) {
+				trav += heap[j].toString(); 
+			}
+			heapTravs.add(trav);
+			
+		}
+	}
+	
+	private void heapify() {
+		for (int i = heapPtr / 2; i >= 0; i--) {
+			maxHeap(i);
+		}
+	}
+	
+	private void maxHeap(int pivot) {
+		int left = 2 * pivot + 1;
+		int right = 2 * pivot + 2;
+		int largest = pivot;
+		if (left <= heapPtr && heap[left].getIntegerValue() > heap[pivot].getIntegerValue())
+			largest = left;
+		if (right <= heapPtr && heap[right].getIntegerValue() > heap[largest].getIntegerValue())
+			largest = right;
+		
+		if (largest != pivot) {
+			swap(pivot, largest);
+			maxHeap(largest);
+		}
+	}
+	
+	private void swap(int swap1, int swap2) {
+		Node temp = heap[swap1];
+		heap[swap1] = heap[swap2];
+		heap[swap2] = temp;
+	}
+	
 	public void resetNodes() {
 		for (int i = 0; i < nodes.size(); i++) {
 			LogicalProblem.getDragPanel().remove(nodes.get(i).getLabel());
@@ -262,6 +325,11 @@ public class NodeCollection implements IsSerializable
 	
 	public int size() {
 		return nodes.size();
+	}
+
+	@Override
+	public Iterator<Node> iterator() {
+		return nodes.iterator();
 	}
 
 }

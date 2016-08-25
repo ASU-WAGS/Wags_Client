@@ -94,6 +94,7 @@ public class ProblemPagePresenterImpl implements ProblemPagePresenter {
 	 */
 	@Override
 	public void update(List<String> data) {
+		
 		//Window.alert("update");
 		serverData = data;
 		int pageState = 0;
@@ -201,7 +202,6 @@ public class ProblemPagePresenterImpl implements ProblemPagePresenter {
 				int status = new Integer(statuses[i]);
 				int type = new Integer(types[i]);
 				String group = groups[i];
-				//Window.alert("Test: " + title + " type: " + type);
 				//subjectList.addItem(group);
 				if (type == magnetType) {
 					if ( status == 0) {
@@ -229,7 +229,7 @@ public class ProblemPagePresenterImpl implements ProblemPagePresenter {
 						logicalCompletedPane.add(new ProblemButton(id, title, status, ProblemType.LOGICAL_PROBLEM));
 						logicalCompletedPane.setVisible(true);
 					}
-					else{
+					else {
 						logicalReviewPane.add(new ProblemButton(id, title, status, ProblemType.LOGICAL_PROBLEM));
 						logicalReviewPane.setVisible(true);
 					}

@@ -1,6 +1,7 @@
 package wags.logical.view;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Icon;
@@ -22,18 +23,23 @@ import org.gwtbootstrap3.client.ui.Row;
 import org.gwtbootstrap3.client.ui.constants.ColumnSize;
 
 import wags.LogicalProblem;
+import wags.logical.Evaluate;
 import wags.logical.Node;
 import wags.logical.NodeCollection;
 import wags.logical.NodeDragController;
+import wags.logical.NodeDropController;
 import wags.logical.PanelDropController;
 import wags.logical.RadixState;
+import wags.logical.view.LogicalPanelUi.Color;
+import wags.logical.view.LogicalProblem.LogicalProblemUiBinder;
 
 public class LogicalProblemCreator {
 
 	protected AbsolutePanel canvasContain;
-	private LogicalProblem problem;
+	private static LogicalProblem problem;
 	public static NodeCollection nc;
 	public static ArrayList<Column> cols = new ArrayList<Column>();
+	public static LinkedHashSet<Node> trav;
 	
 	public LogicalProblemCreator() {
 		
@@ -56,6 +62,10 @@ public class LogicalProblemCreator {
 	
 	public static NodeCollection getNodes() {
 		return nc;
+	}
+	
+	private void setNodes(NodeCollection nc) {
+		this.nc = nc;
 	}
 	
 	public static void buildHashingPanel(Container hashingBoxes, LogicalProblem logProb, ArrayList<Column> grid, AbsolutePanel dragPanel) {
@@ -198,6 +208,38 @@ public class LogicalProblemCreator {
 		sortBoxes.setVisible(true);
 		
 	}
+	
+	public static void buildTraversalPanel(final boolean eval, NodeCollection nodes) {
+		nc = nodes;
+		trav = new LinkedHashSet<Node>(nc.size());
+		for (Node node : nc) {
+			node.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent e) {
+					Label clicked = (Label) e.getSource();
+					if (clicked.getStyleName().equals("node")) {
+						clicked.removeStyleName("node");
+						clicked.addStyleName("selected_node");
+						trav.add(nc.getNodeByLabel(clicked));
+						String progress = "";
+						for (Node element : trav)
+							progress += element.toString() + " ";
+						LogicalPanelUi.setMessage(progress, Color.Notification);
+					} else {
+						clicked.removeStyleName("selected_node");
+						clicked.addStyleName("node");
+						trav.remove(nc.getNodeByLabel(clicked));
+						String progress = "";
+						for (Node element : trav)
+							progress += element.toString() + " ";
+						LogicalPanelUi.setMessage(progress, Color.Notification);
+					}
+					if (eval) 
+						LogicalPanelUi.evaluateButton.click();
+				}
+			});
+		}
+	}
 
 	
 	private static void addLeftRightButtons(AbsolutePanel dragPanel) {
@@ -290,5 +332,43 @@ public class LogicalProblemCreator {
 		dragPanel.add(leftIcon);
 		dragPanel.add(swapButton);
 		dragPanel.add(rightIcon);
+	}
+	
+	public static SimplePanel[] buildHeapSortPanel(AbsolutePanel dragPanel, Container heapBoxes, LogicalProblem logProb) {
+		// make nodes able to be dropped anywhere, as well as on the actual evaluation boxes
+		NodeDropController.setFields(dragPanel, null);
+		NodeDropController.getInstance();
+		Row row = new Row();
+		
+		SimplePanel[] panels = new SimplePanel[logProb.arguments.split("\\s").length];
+		for (int i = 0; i < logProb.arguments.split("\\s").length; i++) {
+			if (i % 12 == 0) {
+				row = new Row();
+				row.setStyleName("heapsort_row");
+				row.setVisible(true);
+				heapBoxes.add(row);
+			}
+			Column col = new Column(ColumnSize.MD_1, new Label("" + i));
+			col.setStyleName("hashing_column");
+			row.add(col);
+			SimplePanel dropPanel = new SimplePanel();   // drop target for each cell
+			dropPanel.setPixelSize(40, 40);
+			dropPanel.getElement().getStyle()
+				.setProperty("margin", "2.5px"); // account for 40x40 node in 50x50 col
+			
+			// This line adds the dropPanel to the cell, making the cell appear to be a drop zone
+			col.add(dropPanel);
+			// Add column to grid ArrayList, for later evaluation
+			//grid.add(col);
+			
+			panels[i] = dropPanel;
+			
+			// set drop controller to dropPanel
+			PanelDropController dropController = new PanelDropController(dropPanel);
+			NodeDragController.getInstance().registerDropController(dropController);
+		}
+		dragPanel.add(heapBoxes);
+		heapBoxes.setVisible(true);
+		return panels;
 	}
 }
